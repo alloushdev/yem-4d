@@ -1,10 +1,9 @@
 import type React from "react"
 import type { Metadata } from "next"
-import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "دردشة فورية",
-  description: "موقع دردشة فورية",
+  title: "تطبيق دردشة بسيط",
+  description: "تم إنشاؤه بواسطة Next.js",
     generator: 'v0.dev'
 }
 
@@ -15,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
-      <body>{children}</body>
+      <body style={{ margin: 0, fontFamily: "sans-serif" }}>{children}</body>
     </html>
   )
 }
+
+
+import './globals.css'

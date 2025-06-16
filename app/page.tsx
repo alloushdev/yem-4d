@@ -2,12 +2,17 @@
 
 import { useState } from "react"
 
-export default function ChatApp() {
+interface Message {
+  id: string
+  nickname: string
+  content: string
+  timestamp: Date
+}
+
+export default function Home() {
   const [nickname, setNickname] = useState("")
   const [isRegistered, setIsRegistered] = useState(false)
-  const [messages, setMessages] = useState<Array<{ id: string; nickname: string; content: string; timestamp: Date }>>(
-    [],
-  )
+  const [messages, setMessages] = useState<Message[]>([])
   const [currentMessage, setCurrentMessage] = useState("")
 
   const handleRegister = () => {
@@ -26,7 +31,7 @@ export default function ChatApp() {
 
   const handleSendMessage = () => {
     if (currentMessage.trim()) {
-      const newMessage = {
+      const newMessage: Message = {
         id: Date.now().toString(),
         nickname: nickname,
         content: currentMessage,
@@ -37,79 +42,179 @@ export default function ChatApp() {
     }
   }
 
+  const styles = {
+    container: {
+      minHeight: "100vh",
+      backgroundColor: "#f0f9ff",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "1rem",
+    },
+    card: {
+      backgroundColor: "white",
+      padding: "2rem",
+      borderRadius: "0.5rem",
+      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+      width: "100%",
+      maxWidth: "28rem",
+    },
+    title: {
+      fontSize: "1.5rem",
+      fontWeight: "bold",
+      textAlign: "center" as const,
+      marginBottom: "1.5rem",
+      color: "#1f2937",
+    },
+    input: {
+      width: "100%",
+      padding: "0.75rem",
+      border: "1px solid #d1d5db",
+      borderRadius: "0.375rem",
+      textAlign: "right" as const,
+      marginBottom: "1rem",
+      fontSize: "1rem",
+    },
+    button: {
+      width: "100%",
+      padding: "0.75rem",
+      backgroundColor: "#3b82f6",
+      color: "white",
+      border: "none",
+      borderRadius: "0.375rem",
+      fontSize: "1rem",
+      cursor: "pointer",
+    },
+    chatContainer: {
+      minHeight: "100vh",
+      backgroundColor: "#f9fafb",
+      display: "flex",
+      flexDirection: "column" as const,
+    },
+    header: {
+      backgroundColor: "white",
+      padding: "1rem",
+      borderBottom: "1px solid #e5e7eb",
+      textAlign: "right" as const,
+    },
+    messagesArea: {
+      flex: 1,
+      padding: "1rem",
+      overflowY: "auto" as const,
+    },
+    message: {
+      backgroundColor: "white",
+      padding: "1rem",
+      borderRadius: "0.5rem",
+      marginBottom: "1rem",
+      boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
+    },
+    messageHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "0.5rem",
+    },
+    nickname: {
+      fontWeight: "bold",
+      color: "#3b82f6",
+    },
+    timestamp: {
+      fontSize: "0.75rem",
+      color: "#6b7280",
+    },
+    inputArea: {
+      backgroundColor: "white",
+      padding: "1rem",
+      borderTop: "1px solid #e5e7eb",
+      display: "flex",
+      gap: "0.5rem",
+    },
+    messageInput: {
+      flex: 1,
+      padding: "0.75rem",
+      border: "1px solid #d1d5db",
+      borderRadius: "0.375rem",
+      textAlign: "right" as const,
+    },
+    sendButton: {
+      padding: "0.75rem 1.5rem",
+      backgroundColor: "#3b82f6",
+      color: "white",
+      border: "none",
+      borderRadius: "0.375rem",
+      cursor: "pointer",
+    },
+  }
+
   if (!isRegistered) {
     return (
-      <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-2xl">💬</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-800">مرحباً بك في الدردشة</h1>
-          </div>
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="أدخل اسمك المستعار"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onKeyPress={(e) => e.key === "Enter" && handleRegister()}
-            />
-            <button
-              onClick={handleRegister}
-              disabled={!nickname.trim()}
-              className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              دخول الدردشة
-            </button>
-          </div>
+      <div style={styles.container}>
+        <div style={styles.card}>
+          <h1 style={styles.title}>مرحباً بك في الدردشة</h1>
+          <input
+            type="text"
+            placeholder="أدخل اسمك المستعار"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            style={styles.input}
+            onKeyPress={(e) => e.key === "Enter" && handleRegister()}
+          />
+          <button
+            onClick={handleRegister}
+            disabled={!nickname.trim()}
+            style={{
+              ...styles.button,
+              backgroundColor: !nickname.trim() ? "#9ca3af" : "#3b82f6",
+              cursor: !nickname.trim() ? "not-allowed" : "pointer",
+            }}
+          >
+            دخول الدردشة
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-white border-b p-4 shadow-sm">
-        <h1 className="text-xl font-bold text-right text-gray-800">الدردشة العامة</h1>
-        <p className="text-sm text-gray-600 text-right">مرحباً {nickname}</p>
+    <div style={styles.chatContainer}>
+      <div style={styles.header}>
+        <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "bold" }}>الدردشة العامة</h1>
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.875rem", color: "#6b7280" }}>مرحباً {nickname}</p>
       </div>
 
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="space-y-4 max-w-4xl mx-auto">
-          {messages.map((message) => (
-            <div key={message.id} className="bg-white p-4 rounded-lg shadow-sm border">
-              <div className="flex justify-between items-start">
-                <span className="text-xs text-gray-500">{message.timestamp.toLocaleTimeString("ar-SA")}</span>
-                <div className="text-right">
-                  <div className="font-semibold text-blue-600 mb-1">{message.nickname}</div>
-                  <div className="text-gray-800">{message.content}</div>
-                </div>
-              </div>
+      <div style={styles.messagesArea}>
+        {messages.map((message) => (
+          <div key={message.id} style={styles.message}>
+            <div style={styles.messageHeader}>
+              <span style={styles.timestamp}>{message.timestamp.toLocaleTimeString("ar-SA")}</span>
+              <span style={styles.nickname}>{message.nickname}</span>
             </div>
-          ))}
-        </div>
+            <div>{message.content}</div>
+          </div>
+        ))}
       </div>
 
-      <div className="bg-white border-t p-4 shadow-sm">
-        <div className="max-w-4xl mx-auto flex space-x-2 space-x-reverse">
-          <input
-            type="text"
-            placeholder="اكتب رسالتك..."
-            value={currentMessage}
-            onChange={(e) => setCurrentMessage(e.target.value)}
-            className="flex-1 p-3 border border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!currentMessage.trim()}
-            className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            إرسال
-          </button>
-        </div>
+      <div style={styles.inputArea}>
+        <input
+          type="text"
+          placeholder="اكتب رسالتك..."
+          value={currentMessage}
+          onChange={(e) => setCurrentMessage(e.target.value)}
+          style={styles.messageInput}
+          onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+        />
+        <button
+          onClick={handleSendMessage}
+          disabled={!currentMessage.trim()}
+          style={{
+            ...styles.sendButton,
+            backgroundColor: !currentMessage.trim() ? "#9ca3af" : "#3b82f6",
+            cursor: !currentMessage.trim() ? "not-allowed" : "pointer",
+          }}
+        >
+          إرسال
+        </button>
       </div>
     </div>
   )

@@ -1,30 +1,17 @@
-# Custom chat website
+# تطبيق دردشة بسيط جدًا
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+هذا المشروع هو تطبيق Next.js بسيط للغاية تم إنشاؤه لاختبار عملية البناء الأساسية على Vercel.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/yemen-chats-projects/v0-custom-chat-website)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/OqnwTldXleK)
+## البدء
 
-## Overview
+أولاً، قم بتشغيل خادم التطوير:
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+\`\`\`bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+\`\`\`
 
-## Deployment
-
-Your project is live at:
-
-**[https://vercel.com/yemen-chats-projects/v0-custom-chat-website](https://vercel.com/yemen-chats-projects/v0-custom-chat-website)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.dev/chat/projects/OqnwTldXleK](https://v0.dev/chat/projects/OqnwTldXleK)**
-
-## How It Works
-
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+افتح [http://localhost:3000](http://localhost:3000) في متصفحك لرؤية النتيجة.
