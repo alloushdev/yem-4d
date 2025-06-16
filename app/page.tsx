@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { useRealtimeChat } from "@/hooks/use-realtime-chat"
+import { useChat } from "@/hooks/use-chat"
 import { MessageCircle, Users, Zap, Wifi, WifiOff, Loader2 } from "lucide-react"
 import { ChatInterface } from "@/components/chat-interface"
 import type { User } from "@/lib/chat-store"
@@ -29,7 +29,7 @@ export default function ChatApp() {
     background: "gradient-1",
     bio: "",
   })
-  const { joinChat, connectionStatus } = useRealtimeChat()
+  const { joinChat, connectionStatus } = useChat()
 
   const handleRegister = async () => {
     if (registrationData.nickname.trim()) {
