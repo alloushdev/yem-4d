@@ -12,10 +12,11 @@ export async function GET(request: NextRequest) {
 
     if (userId1 && userId2) {
       // رسائل خاصة
-      messages = chatStore.getPrivateMessages(userId1, userId2, since ? new Date(since) : undefined)
+      messages = await chatStore.getPrivateMessages(userId1, userId2, since ? new Date(since) : undefined)
     } else {
       // رسائل عامة
-      messages = chatStore.getMessages(since ? new Date(since) : undefined).filter((msg) => !msg.isPrivate)
+      const allMessages = await chatStore.getMessages(since ? new Date(since) : undefined)
+      messages = allMessages.filter((msg) => !msg.isPrivate)
     }
 
     return NextResponse.json({ messages })
@@ -35,9 +36,9 @@ export async function POST(request: NextRequest) {
     }
 
     // تحديث نشاط المستخدم
-    chatStore.updateUserActivity(senderId)
+    await chatStore.updateUserActivity(senderId)
 
-    const message = chatStore.addMessage({
+    const message = await chatStore.addMessage({
       senderId,
       senderNickname,
       senderBackground,

@@ -3,7 +3,7 @@ import { chatStore } from "@/lib/chat-store"
 
 export async function GET() {
   try {
-    const users = chatStore.getUsers()
+    const users = await chatStore.getUsers()
     return NextResponse.json({ users })
   } catch (error) {
     console.error("خطأ في جلب المستخدمين:", error)
@@ -20,10 +20,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "بيانات المستخدم غير مكتملة" }, { status: 400 })
     }
 
-    chatStore.addUser(user)
+    await chatStore.addUser(user)
 
     // إضافة رسالة انضمام
-    chatStore.addMessage({
+    await chatStore.addMessage({
       senderId: "system",
       senderNickname: "النظام",
       senderBackground: "gradient-1",
@@ -48,11 +48,11 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "معرف المستخدم مطلوب" }, { status: 400 })
     }
 
-    chatStore.removeUser(userId)
+    await chatStore.removeUser(userId)
 
     // إضافة رسالة مغادرة
     if (nickname) {
-      chatStore.addMessage({
+      await chatStore.addMessage({
         senderId: "system",
         senderNickname: "النظام",
         senderBackground: "gradient-1",

@@ -3,7 +3,7 @@ import { chatStore } from "@/lib/chat-store"
 
 export async function GET() {
   try {
-    const typingUsers = chatStore.getTypingUsers()
+    const typingUsers = await chatStore.getTypingUsers()
     return NextResponse.json({ typingUsers })
   } catch (error) {
     console.error("خطأ في جلب المستخدمين الذين يكتبون:", error)
@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (isTyping) {
-      chatStore.setUserTyping(userId, nickname)
+      await chatStore.setUserTyping(userId, nickname)
     } else {
-      chatStore.removeUserTyping(userId)
+      await chatStore.removeUserTyping(userId)
     }
 
     return NextResponse.json({ success: true })

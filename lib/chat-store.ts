@@ -1,3 +1,5 @@
+import { supabaseAdmin } from "./supabase"
+
 interface User {
   id: string
   nickname: string
@@ -26,119 +28,280 @@ interface TypingUser {
 }
 
 class ChatStore {
-  private users: Map<string, User> = new Map()
-  private messages: Message[] = []
-  private typingUsers: Map<string, TypingUser> = new Map()
-
   // إدارة المستخدمين
-  addUser(user: User): void {
-    this.users.set(user.id, { ...user, isOnline: true, lastSeen: new Date() })
-  }
+  async addUser(user: User): Promise<void> {
+    try {
+      const { error } = await supabaseAdmin.from("users").upsert({
+        id: user.id,
+        nickname: user.nickname,
+        background: user.background,
+        avatar: user.avatar,
+        is_online: true,
+        last_seen: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
 
-  removeUser(userId: string): void {
-    const user = this.users.get(userId)
-    if (user) {
-      this.users.set(userId, { ...user, isOnline: false, lastSeen: new Date() })
+      if (error) {
+        console.error("خطأ في إضافة المستخدم:", error)
+      }
+    } catch (error) {
+      console.error("خطأ في إضافة المستخدم:", error)
     }
   }
 
-  getUsers(): User[] {
-    return Array.from(this.users.values())
+  async removeUser(userId: string): Promise<void> {
+    try {
+      const { error } = await supabaseAdmin
+        .from("users")
+        .update({
+          is_online: false,
+          last_seen: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId)
+
+      if (error) {
+        console.error("خطأ في إزالة المستخدم:", error)
+      }
+    } catch (error) {
+      console.error("خطأ في إزالة المستخدم:", error)
+    }
   }
 
-  getUser(userId: string): User | undefined {
-    return this.users.get(userId)
+  async getUsers(): Promise<User[]> {
+    try {
+      const { data, error } = await supabaseAdmin.from("users").select("*").order("last_seen", { ascending: false })
+
+      if (error) {
+        console.error("خطأ في جلب المستخدمين:", error)
+        return []
+      }
+
+      return data.map((user) => ({
+        id: user.id,
+        nickname: user.nickname,
+        background: user.background,
+        avatar: user.avatar,
+        isOnline: user.is_online,
+        lastSeen: new Date(user.last_seen),
+      }))
+    } catch (error) {
+      console.error("خطأ في جلب المستخدمين:", error)
+      return []
+    }
   }
 
-  updateUserActivity(userId: string): void {
-    const user = this.users.get(userId)
-    if (user) {
-      this.users.set(userId, { ...user, lastSeen: new Date() })
+  async updateUserActivity(userId: string): Promise<void> {
+    try {
+      const { error } = await supabaseAdmin
+        .from("users")
+        .update({
+          is_online: true,
+          last_seen: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId)
+
+      if (error) {
+        console.error("خطأ في تحديث نشاط المستخدم:", error)
+      }
+    } catch (error) {
+      console.error("خطأ في تحديث نشاط المستخدم:", error)
     }
   }
 
   // إدارة الرسائل
-  addMessage(message: Omit<Message, "id" | "timestamp">): Message {
-    const newMessage: Message = {
-      ...message,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      timestamp: new Date(),
+  async addMessage(message: Omit<Message, "id" | "timestamp">): Promise<Message | null> {
+    try {
+      const newMessage = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        sender_id: message.senderId,
+        sender_nickname: message.senderNickname,
+        sender_background: message.senderBackground,
+        content: message.content,
+        is_private: message.isPrivate,
+        recipient_id: message.recipientId,
+        room_id: message.roomId,
+        created_at: new Date().toISOString(),
+      }
+
+      const { data, error } = await supabaseAdmin.from("messages").insert(newMessage).select().single()
+
+      if (error) {
+        console.error("خطأ في إضافة الرسالة:", error)
+        return null
+      }
+
+      return {
+        id: data.id,
+        senderId: data.sender_id,
+        senderNickname: data.sender_nickname,
+        senderBackground: data.sender_background,
+        content: data.content,
+        timestamp: new Date(data.created_at),
+        isPrivate: data.is_private,
+        recipientId: data.recipient_id,
+        roomId: data.room_id,
+      }
+    } catch (error) {
+      console.error("خطأ في إضافة الرسالة:", error)
+      return null
     }
-
-    this.messages.push(newMessage)
-
-    // الاحتفاظ بآخر 1000 رسالة فقط
-    if (this.messages.length > 1000) {
-      this.messages = this.messages.slice(-1000)
-    }
-
-    return newMessage
   }
 
-  getMessages(since?: Date): Message[] {
-    if (since) {
-      return this.messages.filter((msg) => msg.timestamp > since)
+  async getMessages(since?: Date): Promise<Message[]> {
+    try {
+      let query = supabaseAdmin.from("messages").select("*").order("created_at", { ascending: true }).limit(100)
+
+      if (since) {
+        query = query.gt("created_at", since.toISOString())
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error("خطأ في جلب الرسائل:", error)
+        return []
+      }
+
+      return data.map((msg) => ({
+        id: msg.id,
+        senderId: msg.sender_id,
+        senderNickname: msg.sender_nickname,
+        senderBackground: msg.sender_background,
+        content: msg.content,
+        timestamp: new Date(msg.created_at),
+        isPrivate: msg.is_private,
+        recipientId: msg.recipient_id,
+        roomId: msg.room_id,
+      }))
+    } catch (error) {
+      console.error("خطأ في جلب الرسائل:", error)
+      return []
     }
-    return this.messages.slice(-50) // آخر 50 رسالة
   }
 
-  getPrivateMessages(userId1: string, userId2: string, since?: Date): Message[] {
-    const roomId = [userId1, userId2].sort().join("-")
-    let messages = this.messages.filter((msg) => msg.roomId === roomId)
+  async getPrivateMessages(userId1: string, userId2: string, since?: Date): Promise<Message[]> {
+    try {
+      const roomId = [userId1, userId2].sort().join("-")
 
-    if (since) {
-      messages = messages.filter((msg) => msg.timestamp > since)
+      let query = supabaseAdmin
+        .from("messages")
+        .select("*")
+        .eq("room_id", roomId)
+        .order("created_at", { ascending: true })
+        .limit(50)
+
+      if (since) {
+        query = query.gt("created_at", since.toISOString())
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error("خطأ في جلب الرسائل الخاصة:", error)
+        return []
+      }
+
+      return data.map((msg) => ({
+        id: msg.id,
+        senderId: msg.sender_id,
+        senderNickname: msg.sender_nickname,
+        senderBackground: msg.sender_background,
+        content: msg.content,
+        timestamp: new Date(msg.created_at),
+        isPrivate: msg.is_private,
+        recipientId: msg.recipient_id,
+        roomId: msg.room_id,
+      }))
+    } catch (error) {
+      console.error("خطأ في جلب الرسائل الخاصة:", error)
+      return []
     }
-
-    return messages.slice(-50)
   }
 
   // إدارة الكتابة
-  setUserTyping(userId: string, nickname: string): void {
-    this.typingUsers.set(userId, {
-      userId,
-      nickname,
-      timestamp: new Date(),
-    })
+  async setUserTyping(userId: string, nickname: string): Promise<void> {
+    try {
+      const { error } = await supabaseAdmin.from("typing_status").upsert({
+        user_id: userId,
+        nickname: nickname,
+        is_typing: true,
+        updated_at: new Date().toISOString(),
+      })
 
-    // إزالة حالة الكتابة بعد 3 ثوان
-    setTimeout(() => {
-      this.typingUsers.delete(userId)
-    }, 3000)
-  }
-
-  removeUserTyping(userId: string): void {
-    this.typingUsers.delete(userId)
-  }
-
-  getTypingUsers(): TypingUser[] {
-    const now = new Date()
-    // إزالة المستخدمين الذين توقفوا عن الكتابة منذ أكثر من 3 ثوان
-    for (const [userId, typingUser] of this.typingUsers.entries()) {
-      if (now.getTime() - typingUser.timestamp.getTime() > 3000) {
-        this.typingUsers.delete(userId)
+      if (error) {
+        console.error("خطأ في تحديث حالة الكتابة:", error)
       }
+    } catch (error) {
+      console.error("خطأ في تحديث حالة الكتابة:", error)
     }
-    return Array.from(this.typingUsers.values())
+  }
+
+  async removeUserTyping(userId: string): Promise<void> {
+    try {
+      const { error } = await supabaseAdmin
+        .from("typing_status")
+        .update({
+          is_typing: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+
+      if (error) {
+        console.error("خطأ في إزالة حالة الكتابة:", error)
+      }
+    } catch (error) {
+      console.error("خطأ في إزالة حالة الكتابة:", error)
+    }
+  }
+
+  async getTypingUsers(): Promise<TypingUser[]> {
+    try {
+      const fiveSecondsAgo = new Date(Date.now() - 5000).toISOString()
+
+      const { data, error } = await supabaseAdmin
+        .from("typing_status")
+        .select("*")
+        .eq("is_typing", true)
+        .gt("updated_at", fiveSecondsAgo)
+
+      if (error) {
+        console.error("خطأ في جلب المستخدمين الذين يكتبون:", error)
+        return []
+      }
+
+      return data.map((user) => ({
+        userId: user.user_id,
+        nickname: user.nickname,
+        timestamp: new Date(user.updated_at),
+      }))
+    } catch (error) {
+      console.error("خطأ في جلب المستخدمين الذين يكتبون:", error)
+      return []
+    }
   }
 
   // تنظيف البيانات القديمة
-  cleanup(): void {
-    const now = new Date()
-    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000)
+  async cleanup(): Promise<void> {
+    try {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
 
-    // وضع علامة غير متصل للمستخدمين الذين لم يكونوا نشطين لأكثر من 5 دقائق
-    for (const [userId, user] of this.users.entries()) {
-      if (user.isOnline && user.lastSeen < fiveMinutesAgo) {
-        this.users.set(userId, { ...user, isOnline: false })
-      }
-    }
+      // وضع علامة غير متصل للمستخدمين غير النشطين
+      await supabaseAdmin
+        .from("users")
+        .update({ is_online: false })
+        .eq("is_online", true)
+        .lt("last_seen", fiveMinutesAgo)
 
-    // إزالة حالات الكتابة القديمة
-    for (const [userId, typingUser] of this.typingUsers.entries()) {
-      if (now.getTime() - typingUser.timestamp.getTime() > 3000) {
-        this.typingUsers.delete(userId)
-      }
+      // إزالة حالات الكتابة القديمة
+      await supabaseAdmin
+        .from("typing_status")
+        .update({ is_typing: false })
+        .eq("is_typing", true)
+        .lt("updated_at", new Date(Date.now() - 10000).toISOString()) // 10 ثوان
+    } catch (error) {
+      console.error("خطأ في تنظيف البيانات:", error)
     }
   }
 }
@@ -146,8 +309,10 @@ class ChatStore {
 export const chatStore = new ChatStore()
 
 // تنظيف دوري كل دقيقة
-setInterval(() => {
-  chatStore.cleanup()
-}, 60000)
+if (typeof window === "undefined") {
+  setInterval(() => {
+    chatStore.cleanup()
+  }, 60000)
+}
 
 export type { User, Message, TypingUser }

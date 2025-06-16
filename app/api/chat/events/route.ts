@@ -24,27 +24,27 @@ export async function GET(request: NextRequest) {
       chatStore.updateUserActivity(userId)
 
       // إرسال تحديثات دورية
-      const interval = setInterval(() => {
+      const interval = setInterval(async () => {
         try {
           // جلب الرسائل الجديدة
-          const messages = chatStore.getMessages(new Date(Date.now() - 5000)) // آخر 5 ثوان
+          const messages = await chatStore.getMessages(new Date(Date.now() - 5000)) // آخر 5 ثوان
           if (messages.length > 0) {
             const data = `data: ${JSON.stringify({ type: "messages", data: messages })}\n\n`
             controller.enqueue(encoder.encode(data))
           }
 
           // جلب المستخدمين المتصلين
-          const users = chatStore.getUsers()
+          const users = await chatStore.getUsers()
           const userData = `data: ${JSON.stringify({ type: "users", data: users })}\n\n`
           controller.enqueue(encoder.encode(userData))
 
           // جلب المستخدمين الذين يكتبون
-          const typingUsers = chatStore.getTypingUsers()
+          const typingUsers = await chatStore.getTypingUsers()
           const typingData = `data: ${JSON.stringify({ type: "typing", data: typingUsers })}\n\n`
           controller.enqueue(encoder.encode(typingData))
 
           // تحديث نشاط المستخدم
-          chatStore.updateUserActivity(userId)
+          await chatStore.updateUserActivity(userId)
         } catch (error) {
           console.error("خطأ في إرسال البيانات:", error)
         }
