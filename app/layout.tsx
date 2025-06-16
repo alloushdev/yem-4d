@@ -6,8 +6,8 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "دردشة فورية - Real-Time Chat",
-  description: "موقع دردشة فورية مع محادثات خاصة ودردشة جماعية",
+  title: "دردشة فورية",
+  description: "موقع دردشة فورية",
     generator: 'v0.dev'
 }
 
