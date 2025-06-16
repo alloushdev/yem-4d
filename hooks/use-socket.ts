@@ -46,30 +46,30 @@ export function useSocket() {
         })
 
         socketInstance.on("connect", () => {
-          console.log("متصل بالخادم:", socketInstance.id)
+          console.log("🔌 متصل بالخادم:", socketInstance.id)
           setIsConnected(true)
           setConnectionStatus("connected")
           setSocket(socketInstance)
         })
 
         socketInstance.on("disconnect", () => {
-          console.log("انقطع الاتصال")
+          console.log("❌ انقطع الاتصال")
           setIsConnected(false)
           setConnectionStatus("disconnected")
         })
 
         socketInstance.on("connect_error", (error) => {
-          console.error("خطأ في الاتصال:", error)
+          console.error("❌ خطأ في الاتصال:", error)
           setConnectionStatus("disconnected")
         })
 
         socketInstance.on("users-update", (updatedUsers: User[]) => {
-          console.log("تحديث المستخدمين:", updatedUsers)
+          console.log("👥 تحديث المستخدمين:", updatedUsers.length)
           setUsers(updatedUsers)
         })
 
         socketInstance.on("new-message", (message: Message) => {
-          console.log("رسالة جديدة:", message)
+          console.log("💬 رسالة جديدة:", message.content)
           setMessages((prev) => [
             ...prev,
             {
@@ -80,7 +80,7 @@ export function useSocket() {
         })
 
         socketInstance.on("previous-messages", (previousMessages: Message[]) => {
-          console.log("الرسائل السابقة:", previousMessages)
+          console.log("📜 الرسائل السابقة:", previousMessages.length)
           setMessages(
             previousMessages.map((msg) => ({
               ...msg,
@@ -101,7 +101,7 @@ export function useSocket() {
           socketInstance.disconnect()
         }
       } catch (error) {
-        console.error("خطأ في تهيئة Socket:", error)
+        console.error("❌ خطأ في تهيئة Socket:", error)
         setConnectionStatus("disconnected")
       }
     }
@@ -111,16 +111,16 @@ export function useSocket() {
 
   const joinChat = (userData: Omit<User, "socketId" | "isOnline">) => {
     if (socket && isConnected) {
-      console.log("انضمام للدردشة:", userData)
+      console.log("🚀 انضمام للدردشة:", userData.nickname)
       socket.emit("user-join", userData)
     } else {
-      console.log("Socket غير متصل")
+      console.log("⚠️ Socket غير متصل")
     }
   }
 
   const sendMessage = (content: string, isPrivate = false, recipientId?: string) => {
     if (socket && content.trim() && isConnected) {
-      console.log("إرسال رسالة:", { content, isPrivate, recipientId })
+      console.log("📤 إرسال رسالة:", content)
       socket.emit("send-message", {
         content: content.trim(),
         isPrivate,

@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Send, Users, MessageCircle, Wifi, WifiOff } from "lucide-react"
-import { useChat } from "@/hooks/use-chat"
+import { useRealtimeChat } from "@/hooks/use-realtime-chat"
 
 interface User {
   id: string
@@ -18,7 +18,7 @@ interface User {
   background: string
   avatar: string
   isOnline: boolean
-  socketId: string
+  lastSeen: Date
 }
 
 interface Message {
@@ -54,7 +54,7 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ currentUser }: ChatInterfaceProps) {
-  const { users, messages, typingUsers, sendMessage, handleTyping, stopTyping, connectionStatus } = useChat()
+  const { users, messages, typingUsers, sendMessage, handleTyping, stopTyping, connectionStatus } = useRealtimeChat()
   const [currentMessage, setCurrentMessage] = useState("")
   const [activeChat, setActiveChat] = useState<"public" | string>("public")
   const [privateChats, setPrivateChats] = useState<PrivateChat[]>([])
@@ -100,19 +100,16 @@ export function ChatInterface({ currentUser }: ChatInterfaceProps) {
 
     sendMessage(currentMessage, isPrivate, recipientId)
     setCurrentMessage("")
-    stopTyping(isPrivate, recipientId)
+    stopTyping()
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentMessage(e.target.value)
 
-    const isPrivate = activeChat !== "public"
-    const recipientId = isPrivate ? activeChat.split("-").find((id) => id !== currentUser.id) : undefined
-
     if (e.target.value.trim()) {
-      handleTyping(isPrivate, recipientId)
+      handleTyping()
     } else {
-      stopTyping(isPrivate, recipientId)
+      stopTyping()
     }
   }
 
@@ -155,16 +152,7 @@ export function ChatInterface({ currentUser }: ChatInterfaceProps) {
   }
 
   const getTypingUsersForCurrentChat = () => {
-    const currentChatMessages = getFilteredMessages()
-    const relevantUserIds =
-      activeChat === "public"
-        ? users.map((u) => u.id)
-        : privateChats.find((c) => c.id === activeChat)?.participants || []
-
-    return typingUsers
-      .filter((userId) => relevantUserIds.includes(userId) && userId !== currentUser.id)
-      .map((userId) => users.find((u) => u.id === userId)?.nickname)
-      .filter(Boolean)
+    return typingUsers.filter((user) => user.userId !== currentUser.id).map((user) => user.nickname)
   }
 
   const typingUsersInCurrentChat = getTypingUsersForCurrentChat()
@@ -197,7 +185,7 @@ export function ChatInterface({ currentUser }: ChatInterfaceProps) {
                   <>
                     <WifiOff className="w-4 h-4 text-red-500" />
                     <Badge variant="secondary" className="text-xs bg-red-100 text-red-700">
-                      غير متصل
+                      {connectionStatus === "connecting" ? "جاري الاتصال..." : "غير متصل"}
                     </Badge>
                   </>
                 )}
@@ -370,7 +358,13 @@ export function ChatInterface({ currentUser }: ChatInterfaceProps) {
                 className={`flex items-center space-x-2 space-x-reverse ${connectionStatus === "connected" ? "text-green-600" : "text-red-600"}`}
               >
                 {connectionStatus === "connected" ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
-                <span className="text-sm font-medium">{connectionStatus === "connected" ? "متصل" : "غير متصل"}</span>
+                <span className="text-sm font-medium">
+                  {connectionStatus === "connected"
+                    ? "متصل"
+                    : connectionStatus === "connecting"
+                      ? "جاري الاتصال..."
+                      : "غير متصل"}
+                </span>
               </div>
             </div>
           </div>
@@ -439,18 +433,20 @@ export function ChatInterface({ currentUser }: ChatInterfaceProps) {
               onChange={handleInputChange}
               onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
               className="flex-1 rounded-full border-gray-200 focus:border-blue-500 focus:ring-blue-500 px-6 py-3 text-right"
-              disabled={connectionStatus !== "connected"}
+              disabled={connectionStatus === "disconnected"}
             />
             <Button
               onClick={handleSendMessage}
-              disabled={!currentMessage.trim() || connectionStatus !== "connected"}
+              disabled={!currentMessage.trim() || connectionStatus === "disconnected"}
               className="rounded-full px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg"
             >
               <Send className="w-5 h-5" />
             </Button>
           </div>
           {connectionStatus !== "connected" && (
-            <div className="text-center text-red-500 text-sm mt-2">فقدان الاتصال... جاري إعادة المحاولة</div>
+            <div className="text-center text-red-500 text-sm mt-2">
+              {connectionStatus === "connecting" ? "جاري الاتصال..." : "فقدان الاتصال... جاري إعادة المحاولة"}
+            </div>
           )}
         </div>
       </div>
