@@ -9,16 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@radix-ui/react-avatar": "latest",
-    "@radix-ui/react-label": "latest",
-    "@radix-ui/react-scroll-area": "latest",
-    "@radix-ui/react-separator": "latest",
-    "@radix-ui/react-slot": "latest",
+    "@radix-ui/react-slot": "1.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.454.0",
     "next": "14.2.16",
-    "next-themes": "latest",
     "react": "^18",
     "react-dom": "^18",
     "tailwind-merge": "^2.5.5",
